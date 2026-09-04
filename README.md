@@ -1,61 +1,101 @@
 # OpenClaw Space
 
-个人 OpenClaw 智能体工作空间 —— 基于开源 AI Agent 框架 [OpenClaw](https://openclaw.ai) 搭建，用于构建、配置和管理自己的 AI 智能体。
+基于 Python 实现的轻量级 AI Agent 框架与个人智能体工作空间。
 
 ## 项目简介
 
-本项目基于 [OpenClaw](https://openclaw.ai) 打造个人 AI 智能体工作空间。OpenClaw 是一款开源的 AI Agent 平台，通过对接大语言模型与多渠道通信能力，让智能体具备持久记忆、主动执行任务的能力，可自主完成发邮件、查资料、运行代码、管理文件等操作。
-
-> 说明：具体使用场景可在下方补充，例如"用于日常自动化 / 个人助理 / 学习实验"等。
+本项目用 Python 实现了一个简洁、可扩展的 AI Agent 核心：通过 OpenAI 兼容接口接入任意大语言模型，采用 **ReAct（思考 → 行动 → 观察）** 范式循环执行，支持工具注册、对话记忆与命令行交互，可作为学习 Agent 原理或构建个人智能体的起点。
 
 ## 功能特性
 
-- 基于 OpenClaw 的智能体配置与管理，支持多智能体并行运行
-- 多渠道接入：Telegram、Discord、WhatsApp、微信等 50+ 通信渠道
-- 复用 OpenClaw 5,700+ 内置技能，并支持自定义 Skill（Markdown / TypeScript）
-- 模型无关：可切换 Claude、GPT、DeepSeek、Gemini、本地 Ollama 等
-- 自托管部署，对话数据与 API 密钥完全本地掌控
-
-## 技术栈
-
-- OpenClaw（开源 AI Agent 框架，核心语言 TypeScript）
-- Node.js 22+
-- LLM：OpenAI / Anthropic / Google / 本地 Ollama 等（按需选择）
-
-## 环境要求
-
-- Node.js 22+
-- npm / pnpm / bun（任一包管理器）
-
-## 快速开始
-
-```bash
-# 1. 全局安装 OpenClaw
-npm install -g openclaw@latest
-
-# 2. 初始化并引导配置（选择模型、接入通信渠道）
-openclaw onboard --install-daemon
-
-# 3. 启动 Dashboard 开始使用
-openclaw dashboard
-```
+- 轻量 ReAct Agent：思考 → 调用工具 → 观察结果 → 得出结论
+- 模型无关：兼容 OpenAI / DeepSeek / 通义 / 本地 Ollama 等 OpenAI 兼容接口
+- 工具注册机制：内置时间查询、安全计算器，可自由扩展自定义工具
+- 滑动窗口记忆：保留最近 N 条对话，控制上下文长度
+- 命令行交互：开箱即用，输入问题即可对话
+- 纯 Python 实现，仅依赖 `requests`
 
 ## 项目结构
 
 ```text
 openclaw-space/
-├── README.md          # 项目说明
-└── ...                # 智能体配置 / 自定义 Skills 等（待补充）
+├── main.py                  # 命令行入口
+├── requirements.txt         # 依赖清单
+├── .env.example             # 环境变量示例
+├── openclaw_agent/
+│   ├── __init__.py          # 包入口
+│   ├── config.py            # 配置加载
+│   ├── llm.py               # LLM 客户端（OpenAI 兼容）
+│   ├── tools.py             # 工具注册与内置工具
+│   ├── memory.py            # 对话记忆
+│   └── agent.py             # Agent 核心（ReAct 循环）
+└── README.md
 ```
 
-## 使用说明
+## 快速开始
 
-【待补充】如何配置、运行和使用这个项目，例如智能体的创建与频道绑定方式。
+### 1. 环境要求
+
+- Python 3.9+
+- 任一 OpenAI 兼容的模型服务（OpenAI / DeepSeek / Ollama 等）
+
+### 2. 安装依赖
+
+```bash
+pip install -r requirements.txt
+```
+
+### 3. 配置环境变量
+
+```bash
+cp .env.example .env
+export OPENCLAW_API_KEY=sk-xxx
+export OPENCLAW_API_BASE=https://api.openai.com/v1
+export OPENCLAW_MODEL=gpt-4o-mini
+```
+
+### 4. 启动
+
+```bash
+python main.py
+```
+
+## 使用示例
+
+```text
+你 > 今天星期几？
+OpenClaw > 今天是星期五。
+
+你 > 帮我算一下 (12+8)*3.5
+OpenClaw > (12+8)*3.5 = 70.0
+```
+
+## 扩展自定义工具
+
+在 `openclaw_agent/tools.py` 中注册新工具：
+
+```python
+from openclaw_agent.tools import Tool, ToolRegistry
+
+def my_tool(keyword: str) -> str:
+    return f"查到的结果是：{keyword}"
+
+registry = ToolRegistry.default()
+registry.register(Tool(
+    name="my_tool",
+    description="自定义工具示例",
+    parameters={
+        "type": "object",
+        "properties": {"keyword": {"type": "string"}},
+        "required": ["keyword"],
+    },
+    func=my_tool,
+))
+```
 
 ## 相关链接
 
 - OpenClaw 官网：https://openclaw.ai
-- OpenClaw 官方文档：https://documentation.openclaw.ai
 
 ## 许可证
 
